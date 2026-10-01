@@ -1,6 +1,7 @@
 import ejs from "ejs";
 import fs from "node:fs/promises";
 import path from "node:path";
+
 import type { Product } from "../catalog";
 
 export type EmailTemplateName =
@@ -11,6 +12,7 @@ export type EmailTemplateName =
 export type EmailTemplateData = {
   fromName?: string;
   fromEmail?: string;
+
   recipientName?: string;
   schoolName?: string;
 
@@ -26,50 +28,16 @@ export type EmailTemplateData = {
 
   products?: Product[];
 
-  /**
-   * Public URL of the complete catalogue.
-   * This should normally be an absolute URL when the final HTML
-   * is intended for Mailchimp.
-   */
   catalogueUrl?: string;
-
-  /**
-   * Optional public URL for directly downloading the catalogue.
-   */
   catalogueDownloadUrl?: string;
 
-  /**
-   * Optional publisher website.
-   */
   websiteUrl?: string;
-
-  /**
-   * Optional logo URL.
-   * Must be a publicly accessible absolute URL in production.
-   */
   logoUrl?: string;
 
-  /**
-   * Optional unsubscribe URL.
-   *
-   * For Mailchimp templates, the EJS templates can continue to use
-   * the Mailchimp merge tag *|UNSUB|* directly.
-   */
   unsubscribeUrl?: string;
 
-  /**
-   * Optional company/footer text.
-   */
   footerText?: string;
-
-  /**
-   * Optional label shown in the template header.
-   */
   badgeText?: string;
-
-  /**
-   * Optional visual accent. EJS templates may use this value.
-   */
   accentColor?: string;
 };
 
@@ -78,66 +46,176 @@ export type RenderedEmail = {
   text: string;
 };
 
-const TEMPLATE_NAMES = new Set<EmailTemplateName>([
-  "school-partnership",
-  "product-catalogue",
-  "educational-resources",
-]);
-
 const DEFAULTS = {
   fromName: "Educational Publisher",
   fromEmail: "",
+
   recipientName: "",
   schoolName: "",
+
   previewText: "",
+
   buttonText: "",
   buttonUrl: "",
+
   catalogueUrl: "",
   catalogueDownloadUrl: "",
+
   websiteUrl: "",
   logoUrl: "",
-  unsubscribeUrl: "",
+
+  unsubscribeUrl: "*|UNSUB|*",
+
   footerText:
     "You are receiving this message as part of educational publisher outreach.",
+
   badgeText: "Educational Resources",
+
   accentColor: "#2864a3",
+};
+
+/*
+ * IMPORTANT:
+ *
+ * These paths are intentionally static.
+ * This prevents Turbopack from tracing the entire project
+ * because of dynamically constructed filesystem paths.
+ */
+const TEMPLATE_FILES: Record<
+  EmailTemplateName,
+  {
+    html: string;
+    text: string;
+  }
+> = {
+  "school-partnership": {
+    html: path.join(
+      process.cwd(),
+      "src",
+      "lib",
+      "email",
+      "templates",
+      "school-partnership.ejs",
+    ),
+    text: path.join(
+      process.cwd(),
+      "src",
+      "lib",
+      "email",
+      "templates",
+      "school-partnership.txt.ejs",
+    ),
+  },
+
+  "product-catalogue": {
+    html: path.join(
+      process.cwd(),
+      "src",
+      "lib",
+      "email",
+      "templates",
+      "product-catalogue.ejs",
+    ),
+    text: path.join(
+      process.cwd(),
+      "src",
+      "lib",
+      "email",
+      "templates",
+      "product-catalogue.txt.ejs",
+    ),
+  },
+
+  "educational-resources": {
+    html: path.join(
+      process.cwd(),
+      "src",
+      "lib",
+      "email",
+      "templates",
+      "educational-resources.ejs",
+    ),
+    text: path.join(
+      process.cwd(),
+      "src",
+      "lib",
+      "email",
+      "templates",
+      "educational-resources.txt.ejs",
+    ),
+  },
 };
 
 export async function renderEmailTemplate(
   templateName: EmailTemplateName,
   data: EmailTemplateData,
 ): Promise<RenderedEmail> {
-  if (!TEMPLATE_NAMES.has(templateName)) {
-    throw new Error(`Unknown email template: ${templateName}`);
+  const files =
+    TEMPLATE_FILES[templateName];
+
+  if (!files) {
+    throw new Error(
+      `Unknown email template: ${templateName}`,
+    );
   }
 
-  const [htmlTemplate, textTemplate] = await Promise.all([
-    readTemplateFile(`${templateName}.ejs`),
-    readTemplateFile(`${templateName}.txt.ejs`),
+  const [
+    htmlTemplate,
+    textTemplate,
+  ] = await Promise.all([
+    fs.readFile(
+      files.html,
+      "utf8",
+    ),
+    fs.readFile(
+      files.text,
+      "utf8",
+    ),
   ]);
 
   const templateData = {
     ...data,
 
-    fromName: cleanString(data.fromName, DEFAULTS.fromName),
-    fromEmail: cleanString(data.fromEmail, DEFAULTS.fromEmail),
+    fromName: cleanString(
+      data.fromName,
+      DEFAULTS.fromName,
+    ),
+
+    fromEmail: cleanString(
+      data.fromEmail,
+      DEFAULTS.fromEmail,
+    ),
 
     recipientName: cleanString(
       data.recipientName,
       DEFAULTS.recipientName,
     ),
 
-    schoolName: cleanString(data.schoolName, DEFAULTS.schoolName),
+    schoolName: cleanString(
+      data.schoolName,
+      DEFAULTS.schoolName,
+    ),
 
-    subject: cleanString(data.subject),
+    subject: cleanString(
+      data.subject,
+    ),
+
     previewText: cleanString(
       data.previewText,
       DEFAULTS.previewText,
     ),
 
-    title: cleanString(data.title),
-    intro: cleanString(data.intro),
-    body: cleanString(data.body),
+    title: cleanString(
+      data.title,
+    ),
+
+    intro: cleanString(
+      data.intro,
+    ),
+
+    body: cleanString(
+      data.body,
+    ),
 
     buttonText: cleanString(
       data.buttonText,
@@ -149,7 +227,9 @@ export async function renderEmailTemplate(
       DEFAULTS.buttonUrl,
     ),
 
-    products: Array.isArray(data.products)
+    products: Array.isArray(
+      data.products,
+    )
       ? data.products
       : [],
 
@@ -158,10 +238,11 @@ export async function renderEmailTemplate(
       DEFAULTS.catalogueUrl,
     ),
 
-    catalogueDownloadUrl: cleanString(
-      data.catalogueDownloadUrl,
-      DEFAULTS.catalogueDownloadUrl,
-    ),
+    catalogueDownloadUrl:
+      cleanString(
+        data.catalogueDownloadUrl,
+        DEFAULTS.catalogueDownloadUrl,
+      ),
 
     websiteUrl: cleanString(
       data.websiteUrl,
@@ -173,10 +254,11 @@ export async function renderEmailTemplate(
       DEFAULTS.logoUrl,
     ),
 
-    unsubscribeUrl: cleanString(
-      data.unsubscribeUrl,
-      DEFAULTS.unsubscribeUrl,
-    ),
+    unsubscribeUrl:
+      cleanString(
+        data.unsubscribeUrl,
+        DEFAULTS.unsubscribeUrl,
+      ),
 
     footerText: cleanString(
       data.footerText,
@@ -213,73 +295,39 @@ export async function renderEmailTemplate(
   );
 
   return {
-    html: normalizeRenderedHtml(html),
-    text: normalizeRenderedText(text),
+    html: normalizeHtml(html),
+    text: normalizeText(text),
   };
 }
 
-async function readTemplateFile(filename: string): Promise<string> {
-  const templateCandidates = [
-    // Development / source tree
-    path.join(
-      process.cwd(),
-      "src",
-      "lib",
-      "email",
-      "templates",
-      filename,
-    ),
-
-    // Fallback relative to this module
-    path.resolve(
-      path.dirname(filePathFromImportMetaUrl()),
-      "templates",
-      filename,
-    ),
-  ];
-
-  let lastError: unknown;
-
-  for (const candidate of templateCandidates) {
-    try {
-      return await fs.readFile(candidate, "utf8");
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  throw new Error(
-    `Email template "${filename}" could not be found.${
-      lastError instanceof Error
-        ? ` ${lastError.message}`
-        : ""
-    }`,
-  );
+function cleanString(
+  value: unknown,
+  fallback = "",
+): string {
+  return typeof value ===
+    "string"
+    ? value.trim() || fallback
+    : fallback;
 }
 
-function filePathFromImportMetaUrl(): string {
-  /**
-   * The project currently runs on Linux/Vercel, where pathname is safe.
-   * decodeURIComponent also handles escaped spaces in filesystem paths.
-   */
-  return decodeURIComponent(new URL(import.meta.url).pathname);
-}
-
-function cleanString(value: unknown, fallback = ""): string {
-  return typeof value === "string" ? value.trim() || fallback : fallback;
-}
-
-function normalizeRenderedHtml(value: string): string {
+function normalizeHtml(
+  value: string,
+): string {
   return value
     .replace(/\r\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
-function normalizeRenderedText(value: string): string {
+function normalizeText(
+  value: string,
+): string {
   return value
     .replace(/\r\n/g, "\n")
-    .replace(/[ \t]+\n/g, "\n")
+    .replace(
+      /[ \t]+\n/g,
+      "\n",
+    )
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }

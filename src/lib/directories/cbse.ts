@@ -6,9 +6,13 @@ import type {
   SchoolRecord,
 } from "./types";
 
+import { cbseFetch } from "@/lib/security/cbseRateLimit";
+
 const CBSE_DIRECTORY_URL =
   "https://saras.cbse.gov.in/SARAS/AffiliatedList/ListOfSchdirReport";
+
 const REQUEST_TIMEOUT_MS = 20_000;
+
 const DISTRICT_ENDPOINT =
   "https://saras.cbse.gov.in/SARAS/AffiliatedList/Dist_Bind";
 
@@ -19,14 +23,28 @@ type StateOption = {
 
 export async function getCBSEDirectoryFilters(
   selectedState?: string,
-): Promise<{ states: DirectoryFilterOption[]; districts: DirectoryFilterOption[] }> {
+): Promise<{
+  states: DirectoryFilterOption[];
+  districts: DirectoryFilterOption[];
+}> {
   const html = await fetchHtml(CBSE_DIRECTORY_URL);
-  const $ = cheerio.load(html);
-  const states = parseStates($);
-  const state = selectedState ? findOption(states, selectedState) : undefined;
-  const districts = state ? await fetchDistricts(state.value) : [];
 
-  return { states, districts };
+  const $ = cheerio.load(html);
+
+  const states = parseStates($);
+
+  const state = selectedState
+    ? findOption(states, selectedState)
+    : undefined;
+
+  const districts = state
+    ? await fetchDistricts(state.value)
+    : [];
+
+  return {
+    states,
+    districts,
+  };
 }
 
 export async function scrapeCBSESchools(
@@ -40,10 +58,13 @@ export async function scrapeCBSESchools(
   }
 
   const initialHtml = await fetchHtml(CBSE_DIRECTORY_URL);
+
   const $ = cheerio.load(initialHtml);
+
   const token = $("input[name='__RequestVerificationToken']")
     .first()
     .attr("value");
+
   const states = parseStates($);
 
   if (!token) {
@@ -56,7 +77,9 @@ export async function scrapeCBSESchools(
 
   const records: SchoolRecord[] = [];
 
-  const selectedState = options.state ? findOption(states, options.state) : undefined;
+  const selectedState = options.state
+    ? findOption(states, options.state)
+    : undefined;
 
   if (options.state && !selectedState) {
     throw new Error(`CBSE state was not found: ${options.state}`);
@@ -67,6 +90,7 @@ export async function scrapeCBSESchools(
     : options.randomize
       ? shuffle(states)
       : states;
+
   const excludedCodes = new Set(options.excludeSchoolCodes ?? []);
 
   for (const state of stateOrder) {
@@ -76,22 +100,49 @@ export async function scrapeCBSESchools(
 
     try {
       const district = options.district
-        ? findOption(await fetchDistricts(state.value), options.district)
+        ? findOption(
+            await fetchDistricts(state.value),
+            options.district,
+          )
         : undefined;
 
       if (options.district && !district) {
-        throw new Error(`CBSE district was not found: ${options.district}`);
+        throw new Error(
+          `CBSE district was not found: ${options.district}`,
+        );
       }
 
-      const html = await fetchStateResults(state, token, district?.value ?? "");
-      const stateRecords = parseSchoolRows(html, state.label)
-        .filter((record) => !excludedCodes.has(record.schoolCode ?? record.schoolName));
-      records.push(...(options.randomize ? shuffle(stateRecords) : stateRecords).slice(0, target - records.length));
+      const html = await fetchStateResults(
+        state,
+        token,
+        district?.value ?? "",
+      );
+
+      const stateRecords = parseSchoolRows(
+        html,
+        state.label,
+      ).filter(
+        (record) =>
+          !excludedCodes.has(
+            record.schoolCode ?? record.schoolName,
+          ),
+      );
+
+      records.push(
+        ...(options.randomize
+          ? shuffle(stateRecords)
+          : stateRecords
+        ).slice(0, target - records.length),
+      );
+
       console.info(
         `[CBSE] ${state.label}: parsed ${stateRecords.length} schools`,
       );
     } catch (error) {
-      console.warn(`[CBSE] ${state.label}: unable to parse state results`, error);
+      console.warn(
+        `[CBSE] ${state.label}: unable to parse state results`,
+        error,
+      );
     }
   }
 
@@ -108,7 +159,9 @@ function getTargetLimit(limit?: number): number {
   }
 
   if (!Number.isFinite(limit) || limit < 0) {
-    throw new Error("CBSE school limit must be a finite, non-negative number.");
+    throw new Error(
+      "CBSE school limit must be a finite, non-negative number.",
+    );
   }
 
   return Math.floor(limit);
@@ -140,14 +193,23 @@ async function fetchStateResults(
   });
 }
 
-async function fetchDistricts(stateId: string): Promise<DirectoryFilterOption[]> {
-  const response = await fetch(`${DISTRICT_ENDPOINT}?state_id=${encodeURIComponent(stateId)}`, {
-    cache: "no-store",
-    headers: { Accept: "application/json" },
-  });
+async function fetchDistricts(
+  stateId: string,
+): Promise<DirectoryFilterOption[]> {
+  const response = await cbseFetch(
+    `${DISTRICT_ENDPOINT}?state_id=${encodeURIComponent(stateId)}`,
+    {
+      cache: "no-store",
+      headers: {
+        Accept: "application/json",
+      },
+    },
+  );
 
   if (!response.ok) {
-    throw new Error(`CBSE district request failed with HTTP ${response.status}.`);
+    throw new Error(
+      `CBSE district request failed with HTTP ${response.status}.`,
+    );
   }
 
   const data = (await response.json()) as unknown;
@@ -165,21 +227,30 @@ async function fetchDistricts(stateId: string): Promise<DirectoryFilterOption[]>
       typeof item.value === "string" &&
       typeof item.text === "string"
     ) {
-      return [{ value: item.value.trim(), label: normalizeText(item.text) }];
+      return [
+        {
+          value: item.value.trim(),
+          label: normalizeText(item.text),
+        },
+      ];
     }
 
     return [];
   });
 }
 
-function parseStates($: cheerio.CheerioAPI): StateOption[] {
+function parseStates(
+  $: cheerio.CheerioAPI,
+): StateOption[] {
   return $("#State option[value]")
     .map((_, option) => ({
       value: $(option).attr("value")?.trim() ?? "",
       label: normalizeText($(option).text()),
     }))
     .get()
-    .filter((state) => state.value && state.label);
+    .filter(
+      (state) => state.value && state.label,
+    );
 }
 
 function findOption(
@@ -187,8 +258,11 @@ function findOption(
   selected: string,
 ): DirectoryFilterOption | undefined {
   const normalized = selected.trim().toLowerCase();
+
   return options.find(
-    (option) => option.value.toLowerCase() === normalized || option.label.toLowerCase() === normalized,
+    (option) =>
+      option.value.toLowerCase() === normalized ||
+      option.label.toLowerCase() === normalized,
   );
 }
 
@@ -197,23 +271,34 @@ async function fetchHtml(
   init: RequestInit = {},
 ): Promise<string> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  const timeout = setTimeout(
+    () => controller.abort(),
+    REQUEST_TIMEOUT_MS,
+  );
 
   try {
-    const response = await fetch(url, {
+    const response = await cbseFetch(url, {
       ...init,
       signal: controller.signal,
       cache: "no-store",
     });
 
     if (!response.ok) {
-      throw new Error(`CBSE request failed with HTTP ${response.status}.`);
+      throw new Error(
+        `CBSE request failed with HTTP ${response.status}.`,
+      );
     }
 
     return await response.text();
   } catch (error) {
-    if (error instanceof DOMException && error.name === "AbortError") {
-      throw new Error(`CBSE request timed out after ${REQUEST_TIMEOUT_MS}ms.`);
+    if (
+      error instanceof DOMException &&
+      error.name === "AbortError"
+    ) {
+      throw new Error(
+        `CBSE request timed out after ${REQUEST_TIMEOUT_MS}ms.`,
+      );
     }
 
     throw error;
@@ -222,39 +307,92 @@ async function fetchHtml(
   }
 }
 
-function parseSchoolRows(html: string, stateLabel: string): SchoolRecord[] {
+function parseSchoolRows(
+  html: string,
+  stateLabel: string,
+): SchoolRecord[] {
   const $ = cheerio.load(html);
+
   const records: SchoolRecord[] = [];
 
   $("#myTable tbody tr").each((_, row) => {
     const cells = $(row).find("td");
 
     if (cells.length < 6) {
-      console.warn(`[CBSE] ${stateLabel}: skipped a row with missing cells.`);
+      console.warn(
+        `[CBSE] ${stateLabel}: skipped a row with missing cells.`,
+      );
       return;
     }
 
-    const identity = normalizeText(cells.eq(1).text());
-    const location = normalizeText(cells.eq(2).text());
-    const school = normalizeText(cells.eq(4).text());
-    const contact = normalizeText(cells.eq(5).text());
-    const schoolName = extractField(school, /Name\s*:\s*(.*?)(?=Head\/Principal Name\s*:|$)/i);
+    const identity = normalizeText(
+      cells.eq(1).text(),
+    );
+
+    const location = normalizeText(
+      cells.eq(2).text(),
+    );
+
+    const school = normalizeText(
+      cells.eq(4).text(),
+    );
+
+    const contact = normalizeText(
+      cells.eq(5).text(),
+    );
+
+    const schoolName = extractField(
+      school,
+      /Name\s*:\s*(.*?)(?=Head\s*\/\s*Principal Name\s*:|$)/i,
+    );
 
     if (!schoolName) {
-      console.warn(`[CBSE] ${stateLabel}: school name could not be extracted.`);
+      console.warn(
+        `[CBSE] ${stateLabel}: school name could not be extracted.`,
+      );
       return;
     }
 
-    const affiliationNumber = extractField(identity, /Aff\.\s*No\.\s*:\s*([0-9]+)/i);
-    const schoolCode = extractField(identity, /Sch\.\s*Code\s*:\s*([0-9]+)/i);
-    const state = extractField(location, /State\s*:\s*(.*?)(?=District\s*:|$)/i);
-    const district = extractField(location, /District\s*:\s*(.*)$/i);
-    const address = extractField(contact, /Address\s*:\s*(.*?)(?=Website\s*:|$)/i);
-    const rawWebsite = extractField(contact, /Website\s*:\s*(.*)$/i);
-    const website = normalizeWebsite(rawWebsite, stateLabel, schoolName);
+    const affiliationNumber = extractField(
+      identity,
+      /Aff\.\s*No\.\s*:\s*([0-9]+)/i,
+    );
+
+    const schoolCode = extractField(
+      identity,
+      /Sch\.\s*Code\s*:\s*([0-9]+)/i,
+    );
+
+    const state = extractField(
+      location,
+      /State\s*:\s*(.*?)(?=District\s*:|$)/i,
+    );
+
+    const district = extractField(
+      location,
+      /District\s*:\s*(.*)$/i,
+    );
+
+    const address = extractField(
+      contact,
+      /Address\s*:\s*(.*?)(?=Website\s*:|$)/i,
+    );
+
+    const rawWebsite = extractField(
+      contact,
+      /Website\s*:\s*(.*)$/i,
+    );
+
+    const website = normalizeWebsite(
+      rawWebsite,
+      stateLabel,
+      schoolName,
+    );
 
     if (!affiliationNumber && !schoolCode) {
-      console.warn(`[CBSE] ${stateLabel}: affiliation number and school code are missing for ${schoolName}.`);
+      console.warn(
+        `[CBSE] ${stateLabel}: affiliation number and school code are missing for ${schoolName}.`,
+      );
     }
 
     records.push({
@@ -272,9 +410,16 @@ function parseSchoolRows(html: string, stateLabel: string): SchoolRecord[] {
   return records;
 }
 
-function extractField(value: string, pattern: RegExp): string | undefined {
+function extractField(
+  value: string,
+  pattern: RegExp,
+): string | undefined {
   const match = value.match(pattern);
-  const field = match?.[1] ? normalizeText(match[1]) : "";
+
+  const field = match?.[1]
+    ? normalizeText(match[1])
+    : "";
+
   return field || undefined;
 }
 
@@ -284,22 +429,33 @@ function normalizeWebsite(
   schoolName: string,
 ): string | undefined {
   if (!value) {
-    console.warn(`[CBSE] ${stateLabel}: website is missing for ${schoolName}.`);
+    console.warn(
+      `[CBSE] ${stateLabel}: website is missing for ${schoolName}.`,
+    );
     return undefined;
   }
 
-  const compactValue = value.replace(/\s+/g, "").replace(/[),.;]+$/, "");
-  const candidate = /^https?:\/\//i.test(compactValue)
+  const compactValue = value
+    .replace(/\s+/g, "")
+    .replace(/[),.;]+$/, "");
+
+  const candidate = /^https?:\/\//i.test(
+    compactValue,
+  )
     ? compactValue
     : `https://${compactValue}`;
 
   try {
     const url = new URL(candidate);
+
     const hostname = url.hostname.toLowerCase();
 
     if (
-      !["http:", "https:"].includes(url.protocol) ||
-      (!hostname.includes(".") && hostname !== "localhost")
+      !["http:", "https:"].includes(
+        url.protocol,
+      ) ||
+      (!hostname.includes(".") &&
+        hostname !== "localhost")
     ) {
       throw new Error("invalid hostname");
     }
@@ -309,6 +465,7 @@ function normalizeWebsite(
     console.warn(
       `[CBSE] ${stateLabel}: invalid website for ${schoolName}: ${value}`,
     );
+
     return undefined;
   }
 }

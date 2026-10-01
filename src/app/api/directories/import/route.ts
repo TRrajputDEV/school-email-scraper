@@ -4,11 +4,14 @@ import {
   getCBSEDirectoryFilters,
   scrapeCBSESchools,
 } from "@/lib/directories/cbse";
+import {
+  isCBSEAccessGranted,
+} from "@/lib/security/cbseGuard";
 import type { SchoolBoard } from "@/lib/directories/types";
 
 export const runtime = "nodejs";
 
-const MAX_IMPORT_LIMIT = 50_000;
+const MAX_IMPORT_LIMIT = 20;
 
 type ImportRequest = {
   board?: unknown;
@@ -19,41 +22,78 @@ type ImportRequest = {
   district?: unknown;
 };
 
+function unauthorizedResponse() {
+  return NextResponse.json(
+    {
+      error: "CBSE access is locked. Enter the access code first.",
+    },
+    { status: 401 },
+  );
+}
+
 export async function GET(request: Request) {
-  const state = new URL(request.url).searchParams.get("state") ?? undefined;
+  // IMPORTANT:
+  // Do this before touching CBSE/SARAS.
+  if (!isCBSEAccessGranted(request)) {
+    return unauthorizedResponse();
+  }
+
+  const state =
+    new URL(request.url).searchParams.get("state") ?? undefined;
 
   try {
-    return NextResponse.json(await getCBSEDirectoryFilters(state));
-  } catch (error) {
-    console.error("[directories/import] filter lookup failed", error);
     return NextResponse.json(
-      { error: "Unable to load CBSE directory filters." },
+      await getCBSEDirectoryFilters(state),
+    );
+  } catch (error) {
+    console.error(
+      "[directories/import] filter lookup failed",
+      error,
+    );
+
+    return NextResponse.json(
+      {
+        error:
+          "Unable to load CBSE directory filters.",
+      },
       { status: 502 },
     );
   }
 }
 
 export async function POST(request: Request) {
+  // IMPORTANT:
+  // Do this BEFORE parsing the request or contacting CBSE.
+  if (!isCBSEAccessGranted(request)) {
+    return unauthorizedResponse();
+  }
+
   let body: ImportRequest;
 
   try {
     body = (await request.json()) as ImportRequest;
   } catch {
     return NextResponse.json(
-      { error: "Request body must be valid JSON." },
+      {
+        error: "Request body must be valid JSON.",
+      },
       { status: 400 },
     );
   }
 
   const board = normalizeBoard(body.board);
   const limit = validateLimit(body.limit);
-  const excludeSchoolCodes = normalizeExcludedCodes(body.excludeSchoolCodes);
+  const excludeSchoolCodes = normalizeExcludedCodes(
+    body.excludeSchoolCodes,
+  );
   const state = normalizeFilter(body.state);
   const district = normalizeFilter(body.district);
 
   if (!board) {
     return NextResponse.json(
-      { error: "board must be CBSE." },
+      {
+        error: "board must be CBSE.",
+      },
       { status: 400 },
     );
   }
@@ -81,33 +121,48 @@ export async function POST(request: Request) {
       schools,
     });
   } catch (error) {
-    console.error(`[directories/import] ${board} scraper failed`, error);
+    console.error(
+      `[directories/import] ${board} scraper failed`,
+      error,
+    );
 
     return NextResponse.json(
-      { error: `Unable to import schools from the ${board} directory.` },
+      {
+        error: `Unable to import schools from the ${board} directory.`,
+      },
       { status: 502 },
     );
   }
 }
 
-function normalizeFilter(value: unknown): string | undefined {
+function normalizeFilter(
+  value: unknown,
+): string | undefined {
   if (typeof value !== "string") {
     return undefined;
   }
 
   const normalized = value.trim();
+
   return normalized || undefined;
 }
 
-function normalizeExcludedCodes(value: unknown): string[] {
+function normalizeExcludedCodes(
+  value: unknown,
+): string[] {
   if (!Array.isArray(value)) {
     return [];
   }
 
-  return value.filter((code): code is string => typeof code === "string");
+  return value.filter(
+    (code): code is string =>
+      typeof code === "string",
+  );
 }
 
-function normalizeBoard(value: unknown): SchoolBoard | undefined {
+function normalizeBoard(
+  value: unknown,
+): SchoolBoard | undefined {
   if (typeof value !== "string") {
     return undefined;
   }
@@ -117,7 +172,9 @@ function normalizeBoard(value: unknown): SchoolBoard | undefined {
   return board === "CBSE" ? board : undefined;
 }
 
-function validateLimit(value: unknown): number | undefined {
+function validateLimit(
+  value: unknown,
+): number | undefined {
   if (
     typeof value !== "number" ||
     !Number.isSafeInteger(value) ||
