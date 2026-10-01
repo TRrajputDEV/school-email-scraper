@@ -172,5 +172,9 @@ function normalizeStatus(status: string): string {
     return "failed";
   }
 
+  if (normalized === "partial") {
+    return "partial";
+  }
+
   return normalized;
 }

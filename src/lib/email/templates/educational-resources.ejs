@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title><%= subject %></title>
+  <!--[if !mso]><!-->
+  <style type="text/css">
+    @media screen and (max-width:600px){
+      .container{width:100%!important;max-width:100%!important;}
+      .hero-title{font-size:22px!important;}
+      .content-pad{padding:24px 18px!important;}
+    }
+  </style>
+  <!--<![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:#f2f7f4;color:#1a2d42;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;color:#f2f7f4;"><%= previewText %>&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
+
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f2f7f4;">
+    <tr>
+      <td align="center" style="padding:32px 12px;">
+
+        <table role="presentation" class="container" width="600" cellspacing="0" cellpadding="0" border="0" style="width:600px;max-width:600px;border-radius:4px;overflow:hidden;border:1px solid #c8ddd0;">
+
+          <!-- HEADER -->
+          <tr>
+            <td style="background:#1a2d42;padding:22px 32px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td>
+                    <p style="margin:0;font-size:10px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#7dc4a0;">Educational Resources</p>
+                    <p style="margin:4px 0 0;font-size:20px;font-weight:bold;color:#ffffff;"><%= fromName || 'Educational Publisher' %></p>
+                  </td>
+                  <td align="right" valign="middle">
+                    <span style="display:inline-block;background:#26735d;color:#fff;font-size:10px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:3px;">Resources</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- HERO -->
+          <tr>
+            <td style="background:#26735d;padding:36px 32px 30px;">
+              <p style="margin:0 0 10px;font-size:11px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#a0d4be;">For Teaching &amp; Learning</p>
+              <h1 class="hero-title" style="margin:0 0 14px;font-size:28px;line-height:1.25;color:#ffffff;font-weight:bold;"><%= title %></h1>
+              <p style="margin:0;font-size:16px;line-height:1.6;color:#c5e8da;"><%= intro %></p>
+            </td>
+          </tr>
+
+          <!-- CONTENT -->
+          <tr>
+            <td class="content-pad" style="background:#ffffff;padding:36px 32px;">
+              <p style="margin:0 0 24px;font-size:15px;line-height:1.75;color:#4a5e71;white-space:pre-line;"><%= body %></p>
+
+              <!-- Products/Resources -->
+              <% if (products && products.length) { %>
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:28px;">
+                <tr>
+                  <td style="padding:0 0 12px;border-bottom:2px solid #26735d;">
+                    <p style="margin:0;font-size:10px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#26735d;">Available Resources</p>
+                  </td>
+                </tr>
+                <% products.forEach(function(product){ %>
+                <tr>
+                  <td style="padding:14px 0;border-bottom:1px solid #e4f0e9;">
+                    <strong style="display:block;font-size:15px;color:#1a2d42;"><%= product.name %></strong>
+                    <% if (product.category) { %><span style="display:inline-block;margin-top:4px;font-size:10px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#26735d;"><%= product.category %></span><% } %>
+                    <% if (product.description) { %><span style="display:block;margin-top:5px;font-size:13px;line-height:1.55;color:#6b7f90;"><%= product.description %></span><% } %>
+                  </td>
+                </tr>
+                <% }); %>
+              </table>
+              <% } %>
+
+              <!-- CTA -->
+              <% if (buttonText && buttonUrl) { %>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:14px;">
+                <tr>
+                  <td style="border-radius:4px;background:#26735d;">
+                    <a href="<%= buttonUrl %>" style="display:inline-block;padding:14px 28px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:bold;"><%= buttonText %></a>
+                  </td>
+                </tr>
+              </table>
+              <% } %>
+
+              <% if (catalogueUrl) { %>
+              <p style="margin:16px 0 0;font-size:13px;color:#6b7f90;">View the full catalogue: <a href="<%= catalogueUrl %>" style="color:#26735d;font-weight:bold;text-decoration:none;">Browse Now &rarr;</a></p>
+              <% } %>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background:#f2f7f4;padding:24px 32px;border-top:1px solid #c8ddd0;">
+              <p style="margin:0;font-size:12px;line-height:1.6;color:#6b7f90;">
+                <% if (fromName) { %>Sent by <strong style="color:#1a2d42;"><%= fromName %></strong><% if (fromEmail) { %> &lt;<a href="mailto:<%= fromEmail %>" style="color:#26735d;text-decoration:none;"><%= fromEmail %></a>&gt;<% } %><br><% } %>
+                You are receiving this as part of our educational outreach to CBSE-affiliated schools.
+              </p>
+              <p style="margin:10px 0 0;font-size:11px;color:#9aaab7;"><a href="*|UNSUB|*" style="color:#9aaab7;text-decoration:underline;">Unsubscribe</a></p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

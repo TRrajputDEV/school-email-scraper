@@ -23,4 +23,11 @@ export type DirectoryFetchResult = {
 export type DirectoryScrapeOptions = {
   randomize?: boolean;
   excludeSchoolCodes?: string[];
+  state?: string;
+  district?: string;
+};
+
+export type DirectoryFilterOption = {
+  value: string;
+  label: string;
 };

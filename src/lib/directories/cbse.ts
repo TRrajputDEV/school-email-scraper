@@ -1,15 +1,33 @@
 import * as cheerio from "cheerio";
 
-import type { DirectoryScrapeOptions, SchoolRecord } from "./types";
+import type {
+  DirectoryFilterOption,
+  DirectoryScrapeOptions,
+  SchoolRecord,
+} from "./types";
 
 const CBSE_DIRECTORY_URL =
   "https://saras.cbse.gov.in/SARAS/AffiliatedList/ListOfSchdirReport";
 const REQUEST_TIMEOUT_MS = 20_000;
+const DISTRICT_ENDPOINT =
+  "https://saras.cbse.gov.in/SARAS/AffiliatedList/Dist_Bind";
 
 type StateOption = {
   value: string;
   label: string;
 };
+
+export async function getCBSEDirectoryFilters(
+  selectedState?: string,
+): Promise<{ states: DirectoryFilterOption[]; districts: DirectoryFilterOption[] }> {
+  const html = await fetchHtml(CBSE_DIRECTORY_URL);
+  const $ = cheerio.load(html);
+  const states = parseStates($);
+  const state = selectedState ? findOption(states, selectedState) : undefined;
+  const districts = state ? await fetchDistricts(state.value) : [];
+
+  return { states, districts };
+}
 
 export async function scrapeCBSESchools(
   limit?: number,
@@ -26,13 +44,7 @@ export async function scrapeCBSESchools(
   const token = $("input[name='__RequestVerificationToken']")
     .first()
     .attr("value");
-  const states = $("#State option[value]")
-    .map((_, option) => ({
-      value: $(option).attr("value")?.trim() ?? "",
-      label: normalizeText($(option).text()),
-    }))
-    .get()
-    .filter((state) => state.value && state.label);
+  const states = parseStates($);
 
   if (!token) {
     throw new Error("CBSE directory form token was not found.");
@@ -44,7 +56,17 @@ export async function scrapeCBSESchools(
 
   const records: SchoolRecord[] = [];
 
-  const stateOrder = options.randomize ? shuffle(states) : states;
+  const selectedState = options.state ? findOption(states, options.state) : undefined;
+
+  if (options.state && !selectedState) {
+    throw new Error(`CBSE state was not found: ${options.state}`);
+  }
+
+  const stateOrder = selectedState
+    ? [selectedState]
+    : options.randomize
+      ? shuffle(states)
+      : states;
   const excludedCodes = new Set(options.excludeSchoolCodes ?? []);
 
   for (const state of stateOrder) {
@@ -53,7 +75,15 @@ export async function scrapeCBSESchools(
     }
 
     try {
-      const html = await fetchStateResults(state, token);
+      const district = options.district
+        ? findOption(await fetchDistricts(state.value), options.district)
+        : undefined;
+
+      if (options.district && !district) {
+        throw new Error(`CBSE district was not found: ${options.district}`);
+      }
+
+      const html = await fetchStateResults(state, token, district?.value ?? "");
       const stateRecords = parseSchoolRows(html, state.label)
         .filter((record) => !excludedCodes.has(record.schoolCode ?? record.schoolName));
       records.push(...(options.randomize ? shuffle(stateRecords) : stateRecords).slice(0, target - records.length));
@@ -87,12 +117,13 @@ function getTargetLimit(limit?: number): number {
 async function fetchStateResults(
   state: StateOption,
   token: string,
+  district: string,
 ): Promise<string> {
   const formData = new URLSearchParams({
     __RequestVerificationToken: token,
     MainRadioValue: "State_wise",
     State: state.value,
-    District: "",
+    District: district,
     Region: "",
     InstName_orAddress: "",
     RegiAffNo: "0",
@@ -107,6 +138,58 @@ async function fetchStateResults(
     },
     body: formData.toString(),
   });
+}
+
+async function fetchDistricts(stateId: string): Promise<DirectoryFilterOption[]> {
+  const response = await fetch(`${DISTRICT_ENDPOINT}?state_id=${encodeURIComponent(stateId)}`, {
+    cache: "no-store",
+    headers: { Accept: "application/json" },
+  });
+
+  if (!response.ok) {
+    throw new Error(`CBSE district request failed with HTTP ${response.status}.`);
+  }
+
+  const data = (await response.json()) as unknown;
+
+  if (!Array.isArray(data)) {
+    throw new Error("CBSE district response was invalid.");
+  }
+
+  return data.flatMap((item) => {
+    if (
+      typeof item === "object" &&
+      item !== null &&
+      "value" in item &&
+      "text" in item &&
+      typeof item.value === "string" &&
+      typeof item.text === "string"
+    ) {
+      return [{ value: item.value.trim(), label: normalizeText(item.text) }];
+    }
+
+    return [];
+  });
+}
+
+function parseStates($: cheerio.CheerioAPI): StateOption[] {
+  return $("#State option[value]")
+    .map((_, option) => ({
+      value: $(option).attr("value")?.trim() ?? "",
+      label: normalizeText($(option).text()),
+    }))
+    .get()
+    .filter((state) => state.value && state.label);
+}
+
+function findOption(
+  options: DirectoryFilterOption[],
+  selected: string,
+): DirectoryFilterOption | undefined {
+  const normalized = selected.trim().toLowerCase();
+  return options.find(
+    (option) => option.value.toLowerCase() === normalized || option.label.toLowerCase() === normalized,
+  );
 }
 
 async function fetchHtml(

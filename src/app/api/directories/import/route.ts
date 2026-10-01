@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { scrapeCBSESchools } from "@/lib/directories/cbse";
+import {
+  getCBSEDirectoryFilters,
+  scrapeCBSESchools,
+} from "@/lib/directories/cbse";
 import type { SchoolBoard } from "@/lib/directories/types";
 
 export const runtime = "nodejs";
@@ -12,7 +15,23 @@ type ImportRequest = {
   limit?: unknown;
   randomize?: unknown;
   excludeSchoolCodes?: unknown;
+  state?: unknown;
+  district?: unknown;
 };
+
+export async function GET(request: Request) {
+  const state = new URL(request.url).searchParams.get("state") ?? undefined;
+
+  try {
+    return NextResponse.json(await getCBSEDirectoryFilters(state));
+  } catch (error) {
+    console.error("[directories/import] filter lookup failed", error);
+    return NextResponse.json(
+      { error: "Unable to load CBSE directory filters." },
+      { status: 502 },
+    );
+  }
+}
 
 export async function POST(request: Request) {
   let body: ImportRequest;
@@ -29,6 +48,8 @@ export async function POST(request: Request) {
   const board = normalizeBoard(body.board);
   const limit = validateLimit(body.limit);
   const excludeSchoolCodes = normalizeExcludedCodes(body.excludeSchoolCodes);
+  const state = normalizeFilter(body.state);
+  const district = normalizeFilter(body.district);
 
   if (!board) {
     return NextResponse.json(
@@ -50,6 +71,8 @@ export async function POST(request: Request) {
     const schools = await scrapeCBSESchools(limit, {
       randomize: body.randomize === true,
       excludeSchoolCodes,
+      state,
+      district,
     });
 
     return NextResponse.json({
@@ -65,6 +88,15 @@ export async function POST(request: Request) {
       { status: 502 },
     );
   }
+}
+
+function normalizeFilter(value: unknown): string | undefined {
+  if (typeof value !== "string") {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  return normalized || undefined;
 }
 
 function normalizeExcludedCodes(value: unknown): string[] {

@@ -1,0 +1,22 @@
+<%= subject %>
+<% if (previewText) { %><%= previewText %>
+<% } %>
+---
+
+<% if (fromName) { %>From: <%= fromName %><% if (fromEmail) { %> <<%= fromEmail %>><% } %>
+
+<% } %><%= title %>
+
+<%= intro %>
+
+<%= body %>
+
+<% if (products && products.length) { %>Available Resources:
+<% products.forEach(function(p){ %>- <%= p.name %><% if (p.category) { %> (<%= p.category %>)<% } %>
+<% if (p.description) { %>  <%= p.description %>
+<% } %><% }); %>
+<% } %><% if (buttonText && buttonUrl) { %><%= buttonText %>: <%= buttonUrl %>
+<% } %><% if (catalogueUrl) { %>Browse catalogue: <%= catalogueUrl %>
+<% } %>
+---
+To unsubscribe: *|UNSUB|*
