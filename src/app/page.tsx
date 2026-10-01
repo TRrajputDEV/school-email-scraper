@@ -158,7 +158,6 @@ export default function Home() {
   const [sendMessage, setSendMessage] = useState("");
   const [manualEmails, setManualEmails] = useState<string[]>([]);
   const [manualEmailInput, setManualEmailInput] = useState("");
-  const [invalidManualEmails, setInvalidManualEmails] = useState<string[]>([]);
   const [templateSelection, setTemplateSelection] = useState("default");
   const [subject, setSubject] = useState("");
   const [previewText, setPreviewText] = useState("");
@@ -624,39 +623,7 @@ export default function Home() {
     setSelectedRecipientIds([]);
   }
 
-  function addManualEmails() {
-    const candidates = manualEmailInput.split(/\r?\n/).map((email) => email.trim().toLowerCase()).filter(Boolean);
-    const valid = candidates.filter(isBasicEmail);
-    const invalid = candidates.filter((email) => !isBasicEmail(email));
-    const existing = new Set(emailResults.map((result) => result.email.toLowerCase()).filter((email) => email !== "-"));
-    const newEmails = [...new Set(valid)].filter((email) => !existing.has(email));
 
-    if (newEmails.length > 0) {
-      const manualResults: EmailResult[] = newEmails.map((email) => ({
-        board: "CBSE",
-        schoolName: "Manual recipient",
-        state: "-",
-        district: "-",
-        website: "-",
-        email,
-        sourcePage: "Manual",
-        status: "Success",
-        source: "manual",
-      }));
-      setEmailResults((currentResults) => [...currentResults, ...manualResults]);
-      setManualEmails((currentEmails) => [...new Set([...currentEmails, ...newEmails])]);
-    }
-
-    setInvalidManualEmails(invalid);
-    setManualEmailInput("");
-  }
-
-  function removeManualEmail(email: string) {
-    const normalized = email.toLowerCase();
-    setManualEmails((currentEmails) => currentEmails.filter((currentEmail) => currentEmail !== normalized));
-    setEmailResults((currentResults) => currentResults.filter((result) => !(result.source === "manual" && result.email === normalized)));
-    setSelectedRecipientIds((currentIds) => currentIds.filter((id) => id !== `recipient:${normalized}`));
-  }
 
   function handleSendMail() {
     if (selectedCount === 0) {
@@ -916,7 +883,7 @@ export default function Home() {
             {isExporting ? "Preparing Excel..." : "Export Selected"}
             {!isExporting && <span aria-hidden="true" className="ml-2 text-base">&#8595;</span>}
           </button>
-          <button type="button" onClick={handleSendMail} disabled={isBusy || selectedCount === 0} className="inline-flex h-9 items-center rounded-lg border border-[var(--navy)] px-4 text-xs font-semibold text-[var(--navy)] transition hover:bg-[var(--navy)] hover:text-white disabled:cursor-not-allowed disabled:opacity-40">View Template</button>
+          {/* <button type="button" onClick={handleSendMail} disabled={isBusy || selectedCount === 0} className="inline-flex h-9 items-center rounded-lg border border-[var(--navy)] px-4 text-xs font-semibold text-[var(--navy)] transition hover:bg-[var(--navy)] hover:text-white disabled:cursor-not-allowed disabled:opacity-40">View Template</button> */}
           <span className="text-xs font-medium text-[var(--green)]">{sendMessage}</span>
           </div>
           {exportError && <p role="alert" className="text-xs font-medium text-[#b5483f]">{exportError}</p>}

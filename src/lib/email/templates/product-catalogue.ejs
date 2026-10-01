@@ -5,120 +5,512 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title><%= subject %></title>
+
   <!--[if !mso]><!-->
   <style type="text/css">
-    @media screen and (max-width:600px){
-      .wrapper{width:100%!important;padding:16px!important;}
-      .container{width:100%!important;max-width:100%!important;}
-      .hero-title{font-size:22px!important;}
-      .content-pad{padding:24px 18px!important;}
-      .product-card{display:block!important;width:100%!important;margin-bottom:12px!important;}
+    @media screen and (max-width: 600px) {
+      .container {
+        width: 100% !important;
+      }
+
+      .outer-pad {
+        padding: 12px !important;
+      }
+
+      .content {
+        padding: 26px 20px !important;
+      }
+
+      .hero {
+        padding: 34px 22px !important;
+      }
+
+      .hero-title {
+        font-size: 25px !important;
+      }
+
+      .product-inner {
+        padding: 16px !important;
+      }
+
+      .mobile-full {
+        display: block !important;
+        width: 100% !important;
+      }
+
+      .mobile-center {
+        text-align: center !important;
+      }
     }
   </style>
   <!--<![endif]-->
 </head>
-<body style="margin:0;padding:0;background-color:#faf7f2;color:#1a2d42;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
-  <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;color:#faf7f2;"><%= previewText %>&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
 
-  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#faf7f2;">
+<body
+  style="margin:0;padding:0;background:#f3f6f8;color:#172b3f;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+
+  <!-- PREHEADER -->
+  <div
+    style="display:none!important;max-height:0;overflow:hidden;mso-hide:all;font-size:1px;line-height:1px;color:#f3f6f8;">
+    <%= previewText %>&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+  </div>
+
+  <table
+    role="presentation"
+    width="100%"
+    cellspacing="0"
+    cellpadding="0"
+    border="0"
+    style="width:100%;background:#f3f6f8;">
+
     <tr>
-      <td align="center" style="padding:32px 12px;">
+      <td
+        align="center"
+        class="outer-pad"
+        style="padding:28px 12px;">
 
-        <table role="presentation" class="container" width="600" cellspacing="0" cellpadding="0" border="0" style="width:600px;max-width:600px;border-radius:4px;overflow:hidden;border:1px solid #e2d9c8;">
+        <!-- EMAIL CONTAINER -->
+        <table
+          role="presentation"
+          class="container"
+          width="640"
+          cellspacing="0"
+          cellpadding="0"
+          border="0"
+          style="width:640px;max-width:640px;background:#ffffff;border:1px solid #dde4ea;border-radius:14px;overflow:hidden;">
 
+          <!-- ================================= -->
           <!-- HEADER -->
+          <!-- ================================= -->
           <tr>
-            <td style="background:#1a2d42;padding:22px 32px;">
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+            <td
+              style="background:#152c43;padding:24px 30px;">
+
+              <table
+                role="presentation"
+                width="100%"
+                cellspacing="0"
+                cellpadding="0"
+                border="0">
+
                 <tr>
-                  <td>
-                    <p style="margin:0;font-size:10px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#c4a97d;">Product Catalogue</p>
-                    <p style="margin:4px 0 0;font-size:20px;font-weight:bold;color:#ffffff;"><%= fromName || 'Educational Publisher' %></p>
+
+                  <td
+                    class="mobile-full mobile-center"
+                    valign="middle"
+                    style="vertical-align:middle;">
+
+                    <% if (logoUrl) { %>
+                      <img
+                        src="<%= logoUrl %>"
+                        alt="<%= fromName || 'Educational Publisher' %>"
+                        width="120"
+                        style="display:block;width:120px;max-width:120px;height:auto;border:0;outline:none;text-decoration:none;margin:0 0 10px;">
+                    <% } %>
+
+                    <p
+                      style="margin:0;font-size:9px;line-height:1.4;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#93aec3;">
+                      Educational Publishing
+                    </p>
+
+                    <p
+                      style="margin:5px 0 0;font-size:21px;line-height:1.25;font-weight:bold;color:#ffffff;">
+                      <%= fromName || "Educational Publisher" %>
+                    </p>
+
                   </td>
-                  <td align="right" valign="middle">
-                    <span style="display:inline-block;background:#d97735;color:#fff;font-size:10px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;padding:6px 14px;border-radius:3px;">2024&#8211;25 Edition</span>
+
+                  <% if (badgeText) { %>
+                  <td
+                    align="right"
+                    valign="middle"
+                    class="mobile-full mobile-center"
+                    style="vertical-align:middle;padding-top:8px;">
+
+                    <span
+                      style="display:inline-block;padding:8px 12px;background:#e57f32;color:#ffffff;border-radius:999px;font-size:9px;line-height:1;font-weight:bold;letter-spacing:1px;text-transform:uppercase;">
+                      <%= badgeText %>
+                    </span>
+
                   </td>
+                  <% } %>
+
                 </tr>
               </table>
+
             </td>
           </tr>
 
+          <!-- ================================= -->
           <!-- HERO -->
+          <!-- ================================= -->
           <tr>
-            <td style="background:#d97735;padding:36px 32px 30px;">
-              <p style="margin:0 0 10px;font-size:11px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#f5d9b0;">For Schools &amp; Educators</p>
-              <h1 class="hero-title" style="margin:0 0 14px;font-size:28px;line-height:1.25;color:#ffffff;font-weight:bold;"><%= title %></h1>
-              <p style="margin:0;font-size:16px;line-height:1.6;color:#fdebd4;"><%= intro %></p>
+            <td
+              class="hero"
+              style="background:#2864a3;padding:42px 34px 38px;">
+
+              <p
+                style="margin:0 0 10px;font-size:10px;line-height:1.4;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#b9d3e9;">
+                For Schools &amp; Educators
+              </p>
+
+              <h1
+                class="hero-title"
+                style="margin:0 0 14px;font-size:31px;line-height:1.2;font-weight:bold;color:#ffffff;">
+                <%= title %>
+              </h1>
+
+              <p
+                style="margin:0;font-size:16px;line-height:1.65;color:#e1edf6;">
+                <%= intro %>
+              </p>
+
             </td>
           </tr>
 
-          <!-- INTRO BODY -->
+          <!-- ================================= -->
+          <!-- INTRO -->
+          <!-- ================================= -->
           <tr>
-            <td class="content-pad" style="background:#ffffff;padding:32px;">
-              <p style="margin:0 0 28px;font-size:15px;line-height:1.75;color:#4a5e71;white-space:pre-line;"><%= body %></p>
+            <td
+              class="content"
+              style="background:#ffffff;padding:34px 34px 16px;">
 
-              <!-- Featured Products -->
-              <% if (products && products.length) { %>
-              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:28px;">
+              <% if (recipientName) { %>
+                <p
+                  style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#172b3f;">
+                  Dear <strong><%= recipientName %></strong>,
+                </p>
+              <% } %>
+
+              <% if (schoolName) { %>
+                <p
+                  style="margin:0 0 18px;font-size:14px;line-height:1.7;color:#526579;">
+                  <strong style="color:#172b3f;"><%= schoolName %></strong>
+                </p>
+              <% } %>
+
+              <p
+                style="margin:0;font-size:15px;line-height:1.8;color:#53677a;white-space:pre-line;">
+                <%= body %>
+              </p>
+
+            </td>
+          </tr>
+
+          <!-- ================================= -->
+          <!-- CATALOGUE SECTION -->
+          <!-- ================================= -->
+          <% if (products && products.length) { %>
+
+          <tr>
+            <td
+              class="content"
+              style="background:#ffffff;padding:12px 34px 8px;">
+
+              <table
+                role="presentation"
+                width="100%"
+                cellspacing="0"
+                cellpadding="0"
+                border="0">
+
                 <tr>
-                  <td style="padding:0 0 12px;border-bottom:2px solid #d97735;">
-                    <p style="margin:0;font-size:10px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#d97735;">Featured Products</p>
+                  <td
+                    style="padding:0 0 12px;border-bottom:2px solid #e7edf2;">
+
+                    <p
+                      style="margin:0;font-size:10px;line-height:1.4;font-weight:bold;letter-spacing:2px;text-transform:uppercase;color:#2864a3;">
+                      Featured Catalogue
+                    </p>
+
+                    <p
+                      style="margin:6px 0 0;font-size:13px;line-height:1.55;color:#7a8a99;">
+                      A selection of educational resources from our catalogue.
+                    </p>
+
                   </td>
                 </tr>
-                <% products.forEach(function(product){ %>
+
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- PRODUCT ITEMS -->
+          <tr>
+            <td
+              class="content"
+              style="background:#ffffff;padding:10px 34px 8px;">
+
+              <% products.forEach(function(product, index) { %>
+
+              <table
+                role="presentation"
+                width="100%"
+                cellspacing="0"
+                cellpadding="0"
+                border="0"
+                style="<%= index < products.length - 1 ? 'margin-bottom:14px;' : 'margin-bottom:0;' %>">
+
                 <tr>
-                  <td style="padding:14px 0;border-bottom:1px solid #f0e8d8;">
-                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                  <td
+                    style="border:1px solid #e1e7ec;border-radius:10px;background:#fbfcfd;">
+
+                    <table
+                      role="presentation"
+                      width="100%"
+                      cellspacing="0"
+                      cellpadding="0"
+                      border="0">
+
                       <tr>
-                        <td style="width:5px;background:#d97735;border-radius:2px;" valign="top">&nbsp;</td>
-                        <td style="padding-left:14px;">
-                          <strong style="display:block;font-size:15px;color:#1a2d42;"><%= product.name %></strong>
-                          <% if (product.category) { %><span style="display:inline-block;margin-top:4px;font-size:10px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;color:#d97735;"><%= product.category %></span><% } %>
-                          <% if (product.description) { %><span style="display:block;margin-top:5px;font-size:13px;line-height:1.55;color:#6b7f90;"><%= product.description %></span><% } %>
+
+                        <!-- ACCENT STRIP -->
+                        <td
+                          width="5"
+                          style="width:5px;background:#e57f32;border-radius:10px 0 0 10px;font-size:1px;line-height:1px;">
+                          &nbsp;
+                        </td>
+
+                        <!-- PRODUCT -->
+                        <td
+                          class="product-inner"
+                          style="padding:17px 18px;">
+
+                          <% if (product.category) { %>
+                            <p
+                              style="margin:0 0 6px;font-size:9px;line-height:1.4;font-weight:bold;letter-spacing:1.4px;text-transform:uppercase;color:#e57f32;">
+                              <%= product.category %>
+                            </p>
+                          <% } %>
+
+                          <p
+                            style="margin:0;font-size:16px;line-height:1.35;font-weight:bold;color:#172b3f;">
+                            <%= product.name %>
+                          </p>
+
+                          <% if (product.description) { %>
+                            <p
+                              style="margin:7px 0 0;font-size:13px;line-height:1.65;color:#64778a;">
+                              <%= product.description %>
+                            </p>
+                          <% } %>
+
+                          <% if (product.pdfUrl) { %>
+                            <p style="margin:10px 0 0;">
+                              <a
+                                href="<%= product.pdfUrl %>"
+                                style="font-size:12px;line-height:1.4;font-weight:bold;color:#2864a3;text-decoration:none;">
+                                View this title &rarr;
+                              </a>
+                            </p>
+                          <% } %>
+
+                        </td>
+
+                      </tr>
+
+                    </table>
+
+                  </td>
+                </tr>
+
+              </table>
+
+              <% }); %>
+
+            </td>
+          </tr>
+
+          <% } %>
+
+          <!-- ================================= -->
+          <!-- CATALOGUE CTA -->
+          <!-- ================================= -->
+          <% if (catalogueUrl || catalogueDownloadUrl) { %>
+
+          <tr>
+            <td
+              class="content"
+              style="background:#ffffff;padding:20px 34px 30px;">
+
+              <table
+                role="presentation"
+                width="100%"
+                cellspacing="0"
+                cellpadding="0"
+                border="0"
+                style="background:#f7fafc;border:1px solid #dfe7ee;border-radius:12px;">
+
+                <tr>
+                  <td
+                    align="center"
+                    style="padding:24px 20px;">
+
+                    <p
+                      style="margin:0 0 6px;font-size:17px;line-height:1.4;font-weight:bold;color:#172b3f;">
+                      Explore the complete catalogue
+                    </p>
+
+                    <p
+                      style="margin:0 0 17px;font-size:13px;line-height:1.6;color:#718293;">
+                      Browse the complete range of books and educational resources.
+                    </p>
+
+                    <% if (catalogueUrl) { %>
+                    <table
+                      role="presentation"
+                      cellspacing="0"
+                      cellpadding="0"
+                      border="0"
+                      style="margin:0 auto 10px;">
+
+                      <tr>
+                        <td
+                          style="background:#2864a3;border-radius:7px;">
+
+                          <a
+                            href="<%= catalogueUrl %>"
+                            style="display:inline-block;padding:13px 23px;font-size:13px;line-height:1.2;font-weight:bold;color:#ffffff;text-decoration:none;">
+                            View Full Catalogue
+                          </a>
+
                         </td>
                       </tr>
+
                     </table>
-                  </td>
-                </tr>
-                <% }); %>
-              </table>
-              <% } %>
+                    <% } %>
 
-              <!-- Catalogue CTA -->
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:16px;">
-                <tr>
-                  <td style="border-radius:4px;background:#d97735;">
-                    <a href="<%= catalogueUrl || '/catalog' %>" style="display:inline-block;padding:14px 28px;color:#ffffff;text-decoration:none;font-size:14px;font-weight:bold;">View Full Catalogue &rarr;</a>
+                    <% if (catalogueDownloadUrl) { %>
+                    <p
+                      style="margin:7px 0 0;font-size:12px;line-height:1.5;color:#7a8895;">
+
+                      <a
+                        href="<%= catalogueDownloadUrl %>"
+                        style="font-weight:bold;color:#e57f32;text-decoration:none;">
+                        Download Catalogue
+                      </a>
+
+                    </p>
+                    <% } %>
+
                   </td>
                 </tr>
+
               </table>
 
-              <% if (buttonText && buttonUrl) { %>
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                <tr>
-                  <td style="border-radius:4px;border:2px solid #1a2d42;">
-                    <a href="<%= buttonUrl %>" style="display:inline-block;padding:12px 24px;color:#1a2d42;text-decoration:none;font-size:13px;font-weight:bold;"><%= buttonText %></a>
-                  </td>
-                </tr>
-              </table>
-              <% } %>
             </td>
           </tr>
 
-          <!-- FOOTER -->
+          <% } %>
+
+          <!-- ================================= -->
+          <!-- OPTIONAL CTA -->
+          <!-- ================================= -->
+          <% if (buttonText && buttonUrl) { %>
+
           <tr>
-            <td style="background:#faf7f2;padding:24px 32px;border-top:1px solid #e2d9c8;">
-              <p style="margin:0;font-size:12px;line-height:1.6;color:#8a7560;">
-                <% if (fromName) { %>Sent by <strong style="color:#1a2d42;"><%= fromName %></strong><% if (fromEmail) { %> &lt;<a href="mailto:<%= fromEmail %>" style="color:#d97735;text-decoration:none;"><%= fromEmail %></a>&gt;<% } %><br><% } %>
-                You are receiving this because of your role in school procurement or administration.
-              </p>
-              <p style="margin:10px 0 0;font-size:11px;color:#b0a090;"><a href="*|UNSUB|*" style="color:#b0a090;text-decoration:underline;">Unsubscribe</a></p>
+            <td
+              style="background:#ffffff;padding:0 34px 32px;text-align:center;">
+
+              <table
+                role="presentation"
+                cellspacing="0"
+                cellpadding="0"
+                border="0"
+                align="center">
+
+                <tr>
+                  <td
+                    style="border:1px solid #d5dee6;border-radius:7px;background:#ffffff;">
+
+                    <a
+                      href="<%= buttonUrl %>"
+                      style="display:inline-block;padding:11px 22px;font-size:12px;line-height:1.2;font-weight:bold;color:#172b3f;text-decoration:none;">
+                      <%= buttonText %>
+                    </a>
+
+                  </td>
+                </tr>
+
+              </table>
+
+            </td>
+          </tr>
+
+          <% } %>
+
+          <!-- ================================= -->
+          <!-- FOOTER -->
+          <!-- ================================= -->
+          <tr>
+            <td
+              style="background:#f3f6f8;border-top:1px solid #e0e6eb;padding:24px 30px;">
+
+              <table
+                role="presentation"
+                width="100%"
+                cellspacing="0"
+                cellpadding="0"
+                border="0">
+
+                <tr>
+                  <td align="center">
+
+                    <% if (fromName) { %>
+                    <p
+                      style="margin:0 0 5px;font-size:12px;line-height:1.6;color:#596d7f;">
+                      <strong style="color:#172b3f;"><%= fromName %></strong>
+                      <% if (fromEmail) { %>
+                        &nbsp;&middot;&nbsp;
+                        <a
+                          href="mailto:<%= fromEmail %>"
+                          style="color:#2864a3;text-decoration:none;">
+                          <%= fromEmail %>
+                        </a>
+                      <% } %>
+                    </p>
+                    <% } %>
+
+                    <% if (websiteUrl) { %>
+                    <p
+                      style="margin:0 0 8px;font-size:11px;line-height:1.5;">
+                      <a
+                        href="<%= websiteUrl %>"
+                        style="color:#6d7f8e;text-decoration:none;">
+                        Visit our website
+                      </a>
+                    </p>
+                    <% } %>
+
+                    <p
+                      style="margin:0;font-size:10px;line-height:1.7;color:#8996a1;">
+                      <%= footerText || "You are receiving this message as part of educational publisher outreach." %>
+                    </p>
+
+                    <p
+                      style="margin:10px 0 0;font-size:10px;line-height:1.5;">
+                      <a
+                        href="*|UNSUB|*"
+                        style="color:#8a959e;text-decoration:underline;">
+                        Unsubscribe
+                      </a>
+                    </p>
+
+                  </td>
+                </tr>
+
+              </table>
+
             </td>
           </tr>
 
         </table>
+
       </td>
     </tr>
   </table>
+
 </body>
 </html>
